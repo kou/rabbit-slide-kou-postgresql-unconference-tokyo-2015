@@ -1,0 +1,305 @@
+= PostgreSQLで\n日本語全文検索
+
+: subtitle
+   LIKEとpg_bigmとPGroonga
+: author
+   須藤功平
+: institution
+   株式会社クリアコード
+: content-source
+   PostgreSQLアンカンファレンス＠東京
+: date
+   2015-05-30
+: allotted-time
+   20m
+: theme
+   .
+
+= 内容
+
+(('tag:center'))
+(('tag:large'))
+PostgreSQLで使える\n
+日本語全文検索方法を\n
+順に紹介
+
+((' '))
+
+= 1: LIKE
+
+  * メリット
+    * 標準で使える
+    * インデックス作成不要\n
+      (('note:（データ更新が遅くならない）'))
+    * データが少なければ十分速い
+  * デメリット
+    * データ量に比例して遅くなる
+
+= 「少ない」データ？
+
+どのくらいなら少ないのか\n
+↓\n
+計測結果と要件で判断
+
+= 計測
+
+pg_bigmでいろんなデータを\n
+日本語検索してみよう！\n
+(('note:http://qiita.com/fujii_masao/items/87f1d94ff4d350a718aa'))
+
+  * 青空文庫の書籍一覧データ
+  * 住所データ
+  * 日本版Wikipediaの\n
+    タイトル一覧データ
+
+= 青空文庫：作品名
+
+  * データ:
+    * 11,818件
+    * 1レコード平均17バイト
+  * 速度:
+    * 6.673ms
+
+(('wait'))
+(('tag:center'))
+(('tag:x-large'))
+十分速い
+
+= 住所データ：市区町村
+
+  * データ:
+    * 147,769件
+    * 1レコード平均14バイト
+  * 速度:
+    * 70.684ms
+
+(('wait'))
+(('tag:center'))
+(('tag:x-large'))
+十分速い
+
+= Wikipedia：タイトル
+
+  * データ:
+    * 2,461,588件
+    * 1レコード平均20バイト
+  * 速度:
+    * 943.450ms
+
+(('wait'))
+(('tag:center'))
+(('tag:x-large'))
+十分速い？
+
+= LIKEの計測結果
+
+  # RT
+  delimiter = [|]
+
+  件数 | 平均サイズ | 速度
+
+  11,818 | 17バイト | 6.673ms
+  147,769 | 14バイト | 70.684ms
+  2,461,588 | 20バイト | 943.450ms
+
+(('tag:center'))
+(('tag:margin-top'))
+(('tag:large'))
+十分速いならLIKEでOK！
+
+= LIKE以外の選択肢
+
+  * pg_bigm
+  * PGroonga
+
+= 2: pg_bigm
+
+  * メリット
+    * データ量が多くても高速
+    * ストリーミングレプリケーション可
+  * デメリット
+    * 別途インストールしないといけない
+    * インデックス作成が遅い
+    * ヒット数に比例して遅くなる
+
+= 遅い？
+
+(('tag:center'))
+(('tag:x-large'))
+計測して確認
+
+(('tag:margin-top'))
+(('tag:margin-top'))
+(('note:備考:'))
+  * (('note:LIKEでは計測していないがLIKEよりは確実に速い'))
+  * (('note:LIKEはヒット数に依らずすべて同程度の検索時間になる'))
+
+= 計測
+
+PGroongaとpg_bigmの\n
+ベンチマーク結果\n
+(('note:https://github.com/groonga/wikipedia-search/issues/2'))
+
+  * データ
+    * 日本語版Wikipediaの本文
+    * 1,846,514件
+    * 1レコード平均
+
+= インデックス作成
+
+  # RT
+  delimiter = [|]
+
+  元データの\nロード時間 | インデックス\n作成時間
+
+  16分31秒 | 5時間56分15秒
+
+(('wait'))
+(('tag:center'))
+遅い？そうでもない？
+
+= ヒット数と検索時間
+
+  # RT
+  delimiter = [|]
+
+  ヒット数 | 検索時間
+
+  361 | 0.107s
+  17,168 | 1.224s
+  22,885 | 2.472s
+  625,792 | 15.195s
+
+(('wait'))
+(('tag:center'))
+遅い？そうでもない？
+
+= pg_bigmの計測結果
+
+インデックス作成時間: 約6時間
+
+  # RT
+  caption = 検索時間
+  delimiter = [|]
+
+  ヒット数 | 検索時間
+
+  361 | 0.107s
+  17,168 | 1.224s
+  22,885 | 2.472s
+  625,792 | 15.195s
+
+(('tag:center'))
+(('tag:margin-top'))
+遅くないならpg_bigmでOK！
+
+= 残りの選択肢
+
+  * PGroonga
+
+= 3: PGroonga
+
+  * メリット
+    * インデックス作成が速い
+      * データ量が多くても高速
+    * ヒット数に多くても高速
+  * デメリット
+    * 別途インストールしないといけない
+    * ストリーミングレプリケーション×
+
+= インデックス作成
+
+  # RT
+  delimiter = [|]
+
+  元データの\nロード時間 | インデックス\n作成時間
+
+  16分31秒 | 25分37秒
+
+= インデックス作成：比較
+
+  # RT
+  delimiter = [|]
+
+  PGroonga | pg_bigm
+
+  25分37秒 | 5時間56分15秒
+
+(('wait'))
+(('tag:center'))
+(('tag:margin-top'))
+(('tag:x-large'))
+非常に高速
+
+= ヒット数と検索時間
+
+  # RT
+  delimiter = [|]
+
+  ヒット数 | 検索時間
+
+  368 | 0.030s
+  17,172 | 0.121s
+  22,885 | 0.179s
+  625,792 | 0.646s
+
+= 検索時間：比較
+
+  # RT
+  delimiter = [|]
+
+  ヒット数 | PGroonga | pg_bigm
+
+  368 | 0.030s | 0.107s
+  17,172 | 0.121s | 1.224s
+  22,885 | 0.179s | 2.472s
+  625,792 | 0.646s | 15.195s
+
+(('wait'))
+(('tag:center'))
+(('tag:margin-top'))
+(('tag:x-large'))
+非常に高速
+
+= おねがい
+
+(('tag:center'))
+同じベンチマークを実行して\n
+結果を貼ってください！\n
+(('note:同じ傾向があるか確認したい'))
+
+(('tag:margin-top'))
+(('tag:margin-top'))
+ベンチマークの実行方法↓\n
+(('note:（ここでまとめたデータの生データも貼ってある）'))\n
+(('note:https://github.com/groonga/wikipedia-search/issues/2'))
+
+= まとめ1
+
+  * データが少ないならLIKEで十分
+    * 1レコード数十バイトなら\n
+      百万件はいける
+  * データが多いならLIKEはツライ
+
+= まとめ2
+
+  * データ多→pg_bigmかPGroonga
+    * ヒット件数が多い→PGroonga
+    * レコードサイズが大きい→PGroonga
+    * 更新が多い→PGroonga\n
+      (('note:（インデックス作成が速いから）'))
+    * ストリーミングレプリケーション要\n
+      →pg_bigm
+
+= 参考情報
+
+(('tag:center'))
+PGroongaでも\n
+レプリケーションできる！
+
+(('tag:margin-top'))
+pg_shardとPGroongaを使った\n
+レプリケーション対応の\n
+高速日本語全文検索可能な\n
+PostgreSQLクラスターの作り方\n
+(('note:http://www.clear-code.com/blog/2015/5/18.html'))

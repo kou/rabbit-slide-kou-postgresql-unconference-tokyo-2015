@@ -1,0 +1,26 @@
+---
+id: postgresql-unconference-tokyo-2015
+base_name: postgresql-japanese-full-text-search-like-pg-bigm-pgroonga
+tags:
+- rabbit
+- full-text-search
+- pgunconf
+- pgroonga
+- pg_bigm
+- groonga
+presentation_date: 2015-05-30
+version: 2015.5.30.0
+licenses:
+- CC BY-SA 4.0
+slideshare_id: 
+speaker_deck_id: 
+ustream_id: 
+vimeo_id: 
+youtube_id: 
+author:
+  markup_language: :rd
+  name: Kouhei Sutou
+  email: kou@clear-code.com
+  rubygems_user: kou
+  slideshare_user: kou
+  speaker_deck_user: kou
