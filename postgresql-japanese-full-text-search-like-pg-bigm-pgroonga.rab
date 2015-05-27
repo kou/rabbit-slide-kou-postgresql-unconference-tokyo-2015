@@ -249,6 +249,8 @@ PGroongaとpg_bigmの\n
 
 (('note:(*) work_memを10MBに増やしている'))
 
+(('note:(*) 直接Groongaで検索すると0.085s'))
+
 = 検索時間：比較
 
   # RT
